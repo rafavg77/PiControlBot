@@ -23,7 +23,8 @@ buttons = {
     "VPN_UP" : "💡 Levantar VPN 💡",
     "VPN_DOWN" : "🚿 Bajar VPN 🚿",
     "GET_PUBLIC_IP" :  "🔥 Consultar IP pública de la caseta 🔥",
-    "PING" : "🏓 Hacer un ping al bot 🏓"
+    "PING" : "🏓 Hacer un ping al bot 🏓",
+    "NGROK_CHANGE" : "Revisar cambio de tunnel"
 }
 
 #Se configura API del Bot
@@ -52,9 +53,14 @@ def handle_start_help(message):
 
 # Funcion para enviar parametros al servicio del tunel ngrok
 def handle_execute_command(message):
-    
     command_to_execute = message.text
     result = ngrok_executor.tunnel_command(command_to_execute,buttons)
+    bot.send_message(message.chat.id, f"Salida del comando:\n{result}", reply_markup=ReplyKeyboardRemove())
+
+# Funcion para enviar parametros al servicio del tunel ngrok
+def handle_change_ngrok(message):
+    command_to_execute = message.text
+    result = ngrok_executor.tunnel_detect_change_addres()
     bot.send_message(message.chat.id, f"Salida del comando:\n{result}", reply_markup=ReplyKeyboardRemove())
 
 
@@ -68,6 +74,8 @@ def handle_other_messages(message):
         handle_execute_command(message)
     elif message.text == buttons['VPN_DOWN']:
         handle_execute_command(message)
+    elif message.text == buttons['NGROK_CHANGE']:
+        handle_change_ngrok(message)
     else:
         bot.send_message(message.chat.id, "Lo siento, no entiendo ese comando.")
 
