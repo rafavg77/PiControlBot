@@ -1,0 +1,15 @@
+[Unit]
+Description=Bot Controlador de Ngrok y OpenVPN
+
+Wants=network.target
+After=network.target
+
+[Service]
+ExecStart=/home/pi/Developer/PiControlBot/venv/bin/python3 /home/pi/Developer/PiControlBot/src/bot.py
+Restart=on-failure
+RestartSec=10
+SyslogIdentifier=PiControlBot
+User=pi
+
+[Install]
+WantedBy=multi-user.target
