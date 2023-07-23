@@ -4,6 +4,7 @@ from config.loggin_config import logging, logger, BOT_NAME
 from config.loader_config import load_config
 from utils.helpers import user_is_allowed
 from utils.ngrok_util import NgrokExecutor
+from APiHole import PiHole
 
 logger = logging.getLogger(BOT_NAME)
 config = load_config()
@@ -16,19 +17,25 @@ BOT_TOKEN = config.get('BOT_TOKEN', '')
 BOT_MASTER = config.get('BOT_MASTER', '')
 BOOT_MESSAGE = config.get('BOOT_MESSAGE', '')
 USUARIOS_PERMITIROS = config.get('USUARIOS_PERMITIROS', [])
+PIHOLE_ADDRESS = config.get('PIHOLE_ADDRESS', '')
+PIHOLE_AUTH = config.get('PIHOLE_AUTH', '')
+
 
 #Configuración de constntes
 buttons = {
     "VPN_STATUS" : "💳 Consultar estatus de VPN 💳",
     "VPN_UP" : "💡 Levantar VPN 💡",
     "VPN_DOWN" : "🚿 Bajar VPN 🚿",
-    "GET_PUBLIC_IP" :  "🔥 Consultar IP pública de la caseta 🔥",
     "PING" : "🏓 Hacer un ping al bot 🏓",
-    "NGROK_CHANGE" : "Revisar cambio de tunnel"
+    "NGROK_CHANGE" : "Revisar cambio de tunnel",
+    "PIHOLE_STATUS" : "🔥 Status de bloqueo PiHole 🔥",
+    "PIHOLE_CHANGE" : "🎮 Cambiar Status de bloqueo PiHole 🎮"
 }
 
 #Se configura API del Bot
 bot = telebot.TeleBot(BOT_TOKEN)
+PiHoleAPI= PIHOLE_AUTH
+PiIP=PIHOLE_ADDRESS
 
 #Se instancia el decorador de validación de usuarios.
 user_is_allowed_decorator = user_is_allowed(bot, logger, USUARIOS_PERMITIROS, BOT_MASTER)
@@ -63,6 +70,33 @@ def handle_change_ngrok(message):
     result = ngrok_executor.tunnel_detect_change_addres(message,bot)
     bot.send_message(message.chat.id, f"Salida del comando:\n{result}", reply_markup=ReplyKeyboardRemove())
 
+@bot.message_handler(commands=['blockStatus'])
+@user_is_allowed_decorator
+def send_block_status(message):
+    status = PiHole.GetStatus(PiIP,PiHoleAPI)
+    status_value = status.split(" ")[1]
+    
+    bot.send_message(message.chat.id, "Blocking Status is: " + status_value)
+
+@bot.message_handler(commands=['changeBlockStatus'])
+@user_is_allowed_decorator
+def send_change_block_status(message):
+    status = PiHole.GetStatus(PiIP,PiHoleAPI)
+    status_value = status.split(" ")[1]
+    
+    
+    if status_value == "disabled":
+        PiHole.Enable(PiIP,PiHoleAPI)
+        bot.send_message(message.chat.id, "Blocking Status is: Enabled")
+    elif status_value == "enabled":
+        PiHole.Disable(PiIP,PiHoleAPI,0)
+        bot.send_message(message.chat.id, "Blocking Status is: Disabled")
+
+#Comando que recibe ping y reponde pong
+@bot.message_handler(commands=['makePing'])
+@user_is_allowed_decorator
+def makePing(message):
+    bot.send_message(message.chat.id, "Pong 🏓")
 
 # Manejador para cualquier otro mensaje que no corresponda a un comando.
 @bot.message_handler(func=lambda message: True)
@@ -76,6 +110,13 @@ def handle_other_messages(message):
         handle_execute_command(message)
     elif message.text == buttons['NGROK_CHANGE']:
         handle_change_ngrok(message)
+    elif message.text == buttons['PING']:
+        makePing(message)
+    elif message.text == buttons['PIHOLE_STATUS']:
+        send_block_status(message)
+    elif message.text == buttons['PIHOLE_CHANGE']:
+        send_change_block_status(message)
+        
     else:
         bot.send_message(message.chat.id, "Lo siento, no entiendo ese comando.")
 
