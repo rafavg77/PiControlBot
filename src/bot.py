@@ -1,4 +1,5 @@
 import telebot
+from telebot.types import ReplyKeyboardRemove
 from config.loggin_config import logging, logger, BOT_NAME
 from config.loader_config import load_config
 from utils.helpers import user_is_allowed
@@ -14,7 +15,7 @@ ngrok_executor.set_logger(logger)
 BOT_TOKEN = config.get('BOT_TOKEN', '')
 BOT_MASTER = config.get('BOT_MASTER', '')
 BOOT_MESSAGE = config.get('BOOT_MESSAGE', '')
-USUARIOS_PERMITIROS = config.get('usuarios_permitidos', [])
+USUARIOS_PERMITIROS = config.get('USUARIOS_PERMITIROS', [])
 
 #Configuración de constntes
 buttons = {
@@ -49,14 +50,12 @@ def create_custom_keyboard():
 def handle_start_help(message):
     bot.send_message(message.chat.id, "Hola mundo", reply_markup=create_custom_keyboard())
 
-# Manejador para el comando /execute (o cualquier otro comando que desees).
-@bot.message_handler(commands=['execute'])
-@user_is_allowed_decorator
+# Funcion para enviar parametros al servicio del tunel ngrok
 def handle_execute_command(message):
     
     command_to_execute = message.text
     result = ngrok_executor.tunnel_command(command_to_execute,buttons)
-    bot.send_message(message.chat.id, f"Salida del comando:\n{result}")
+    bot.send_message(message.chat.id, f"Salida del comando:\n{result}", reply_markup=ReplyKeyboardRemove())
 
 
 # Manejador para cualquier otro mensaje que no corresponda a un comando.
@@ -71,6 +70,7 @@ def handle_other_messages(message):
         handle_execute_command(message)
     else:
         bot.send_message(message.chat.id, "Lo siento, no entiendo ese comando.")
+
     #elif message.text == GET_PUBLIC_IP:
     #        getPublicIPInfo(message)
     #elif message.text == PING:
