@@ -60,7 +60,7 @@ def handle_execute_command(message):
 # Funcion para enviar parametros al servicio del tunel ngrok
 def handle_change_ngrok(message):
     command_to_execute = message.text
-    result = ngrok_executor.tunnel_detect_change_addres()
+    result = ngrok_executor.tunnel_detect_change_addres(message,bot)
     bot.send_message(message.chat.id, f"Salida del comando:\n{result}", reply_markup=ReplyKeyboardRemove())
 
 

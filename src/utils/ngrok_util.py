@@ -48,7 +48,7 @@ class NgrokExecutor:
             return f"Error al ejecutar el comando: {e.output.decode('utf-8').strip()}"
          
     @keyboard_function
-    def tunnel_detect_change_addres(self    ):
+    def tunnel_detect_change_addres(self, message, bot):
             ngrok_api_url = "http://rokubi.lan:4040/api/tunnels"
 
             try:
@@ -71,8 +71,9 @@ class NgrokExecutor:
                             # Comparar los valores address y port con address2 y port2
                             print(address, port, address2, port2)
                             if address != address2 or port != port2:
-                                self.update_ovpn_file(address, port)
+                                self.update_ovpn_file(address, port, address2, port2)
                                 print("si hay cambios")
+                                self.send_ovpn_file(message,bot)
                                 return address, port, address2, port2
                             else:
                                 print("No hay cambios")
@@ -109,21 +110,35 @@ class NgrokExecutor:
         except Exception as e:
             return None, None  # En caso de error al leer el archivo o procesar los valores
     
-    def update_ovpn_file(self, address, port):
+    def update_ovpn_file(self, address, port, address2, port2):
         # Ruta del archivo vpn.ovpn
-        ovpn_file_path = "/home/pi/ovpns/vpn.ovpn"
+        ovpn_file_path = "/home/pi/ovpns/rafa.ovpn"
+
+        if not os.path.isfile(ovpn_file_path):
+            return "No se encontró el archivo de configuración"
 
         try:
             with open(ovpn_file_path, "r") as ovpn_file:
-                lines = ovpn_file.readlines()
+                data = ovpn_file.read()
+                data = data.replace("remote " + address2 +" "+ port2, "remote "+ address +" "+ port)
 
             with open(ovpn_file_path, "w") as ovpn_file:
-                for line in lines:
-                    if line.strip().startswith("remote"):
-                        # Actualizar la línea "remote" con los nuevos valores de address y port
-                        ovpn_file.write(f"remote {address} {port}\n")
-                    else:
-                        ovpn_file.write(line)
-
+                ovpn_file.write(data)
+                
         except Exception as e:
             pass  # En caso de error al actualizar el archivo, simplemente omitir el cambio
+    
+    def send_ovpn_file(self, message, bot):
+        # Ruta del archivo vpn.ovpn
+        ovpn_file_path = "/home/pi/ovpns/rafa.ovpn"
+
+        if not os.path.isfile(ovpn_file_path):
+            return False  # Si el archivo vpn.ovpn no existe, devolver False
+
+        try:
+            with open(ovpn_file_path, "rb") as ovpn_file:
+                # Enviar el archivo vpn.ovpn como respuesta al usuario
+                bot.send_document(message.chat.id, ovpn_file)
+            return True
+        except Exception as e:
+            return False  # En caso de error al enviar el archivo, devolver False
