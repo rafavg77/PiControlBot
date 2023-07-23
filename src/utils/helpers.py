@@ -7,7 +7,7 @@ def get_user_name(bot, logger, user_id):
     except telebot.apihelper.ApiException:
         return logger.warning(f"No se pudo resolver el nombre de (ID: {user_id})")
 
-def user_is_allowed(bot, logger, usuarios_permitidos):
+def user_is_allowed(bot, logger, usuarios_permitidos, BOT_MASTER):
     def decorator(func):
         def wrapper(message):
             user_id = message.from_user.id
@@ -19,6 +19,7 @@ def user_is_allowed(bot, logger, usuarios_permitidos):
                 return func(message)
             else:
                 logger.warning(f"Intento de ejecución de comando por un usuario no autorizado: Usuario {user_name} (ID: {user_id}), Comando: {message.text}")
+                bot.send_message(BOT_MASTER,f"Intento de ejecución de comando por un usuario no autorizado: Usuario {user_name} (ID: {user_id}), Comando: {message.text}")
                 bot.send_message(message.chat.id, "Lo siento, no tienes permitido interactuar con este bot.")
         return wrapper
     return decorator

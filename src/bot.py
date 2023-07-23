@@ -31,7 +31,7 @@ buttons = {
 bot = telebot.TeleBot(BOT_TOKEN)
 
 #Se instancia el decorador de validación de usuarios.
-user_is_allowed_decorator = user_is_allowed(bot, logger, USUARIOS_PERMITIROS)
+user_is_allowed_decorator = user_is_allowed(bot, logger, USUARIOS_PERMITIROS, BOT_MASTER)
 
 # Función para crear el teclado personalizado con 3 filas de botones.
 def create_custom_keyboard():
